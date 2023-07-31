@@ -81,14 +81,72 @@ function Users({ data }) {
     .map((user) => <UserCard key={user.id} user={user} />)
 }
 
+const UPDATE_USER_MUTATION = gql`
+  mutation UpdateUser($input: UpdateUserInput!) {
+    updateUser(input: $input) {
+      name
+      email
+      username
+    }
+  }
+`
+
 function UserCard({ user }) {
+  const [updateUser, setUpdateUser] = useState(false)
+
+  const [name, setName] = useState(user.name)
+  const [email, setEmail] = useState(user.email)
+  const [username, setUserName] = useState(user.username)
+
+  const [updateUserMutation] = useMutation(UPDATE_USER_MUTATION)
+
+  const handleUpdateUser = async () => {
+    updateUserMutation({
+      variables: {
+        input: { id: user.id, name, email, username },
+      },
+    })
+    setUpdateUser(false)
+    // TODO: refetch the users and check how to update maybe cache??
+  }
+
   return (
     <div style={{ padding: '8px', border: '1px solid #ccc', margin: '16px 0' }}>
-      <KeyVal title='Name' val={user.name} />
-      <KeyVal title='Username' val={user.username} />
+      {updateUser ? (
+        <>
+          <input
+            onChange={(e) => setName(e.target.value)}
+            placeholder='Name'
+            type='text'
+            value={name}
+          />
+          <input
+            onChange={(e) => setUserName(e.target.value)}
+            placeholder='Username'
+            type='text'
+            value={username}
+          />
+          <input
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder='email'
+            type='text'
+            value={email}
+          />
+        </>
+      ) : (
+        <>
+          <KeyVal title='Name' val={user.name} />
+          <KeyVal title='Username' val={user.username} />
+          <KeyVal title='Email' val={user.email} />
+        </>
+      )}
       <KeyVal title='Age' val={user.age} />
-      <KeyVal title='Email' val={user.email} />
       <KeyVal title='Member Since' val={new Date(user.createdOn).toLocaleDateString()} />
+      {updateUser ? (
+        <button onClick={handleUpdateUser}>Submit</button>
+      ) : (
+        <button onClick={() => setUpdateUser(true)}>Update user</button>
+      )}
     </div>
   )
 }
